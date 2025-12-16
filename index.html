@@ -3,262 +3,399 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Virus Resistance Damage Calculator</title>
+    <title>Season 4 Stronghold Calculator</title>
     <style>
         :root {
-            --bg-color: #1a1a1a;
-            --card-bg: #2d2d2d;
-            --text-color: #ffffff;
-            --accent-color: #00ff9d; /* Bright Green */
-            --danger-color: #ff4d4d; /* Red */
-            --input-bg: #3d3d3d;
+            --bg-color: #0f0f13;
+            --card-bg: #1b1b22;
+            --input-bg: #2a2a35;
+            --text-main: #e0e0e0;
+            --text-muted: #888;
+            --accent: #ffb300; /* Gold/Amber for Season 4 */
+            --danger: #ff4444;
+            --success: #00e676;
+            --border: #333;
         }
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: var(--bg-color);
-            color: var(--text-color);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
+            color: var(--text-main);
             margin: 0;
             padding: 20px;
+            display: flex;
+            justify-content: center;
         }
 
         .container {
-            background-color: var(--card-bg);
-            padding: 2rem;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-            max-width: 400px;
             width: 100%;
+            max-width: 600px;
+            background-color: var(--card-bg);
+            padding: 25px;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            border: 1px solid var(--border);
         }
 
         h2 {
             text-align: center;
-            color: var(--accent-color);
-            margin-bottom: 1.5rem;
+            color: var(--accent);
             margin-top: 0;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 1.5rem;
         }
 
-        .input-group {
-            margin-bottom: 1.2rem;
+        /* Grid Layout for Form */
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
         }
+        
+        .full-width { grid-column: span 2; }
 
         label {
             display: block;
-            margin-bottom: 0.5rem;
-            font-size: 0.9rem;
-            color: #ccc;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 5px;
         }
 
-        input {
+        select, input {
             width: 100%;
             padding: 12px;
-            border: 1px solid #444;
-            border-radius: 6px;
             background-color: var(--input-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
             color: white;
             font-size: 1rem;
             box-sizing: border-box;
         }
-
-        input:focus {
+        
+        select:focus, input:focus {
             outline: none;
-            border-color: var(--accent-color);
+            border-color: var(--accent);
         }
 
-        button {
-            width: 100%;
-            padding: 14px;
-            background-color: var(--accent-color);
-            color: #1a1a1a;
-            border: none;
-            border-radius: 6px;
-            font-size: 1.1rem;
-            font-weight: bold;
+        /* Checkbox styling */
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: var(--input-bg);
+            padding: 10px;
+            border-radius: 8px;
             cursor: pointer;
-            transition: background 0.3s;
+        }
+        .checkbox-group input { width: auto; }
+        .checkbox-group span { font-size: 0.9rem; }
+
+        /* Buttons */
+        .btn {
+            width: 100%;
+            padding: 15px;
+            background-color: var(--accent);
+            color: #000;
+            font-weight: bold;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: 0.2s;
             margin-top: 10px;
         }
+        .btn:hover { background-color: #ffca28; }
 
-        button:hover {
-            background-color: #00cc7a;
-        }
-
-        .result-box {
+        /* Results Area */
+        .results {
+            background-color: #121214;
             margin-top: 25px;
-            padding: 15px;
-            background-color: #222;
-            border-radius: 6px;
-            border-left: 4px solid #555;
-            display: none;
+            border-radius: 10px;
+            padding: 20px;
+            display: none; /* Hidden by default */
+            border-left: 5px solid var(--accent);
         }
 
-        .result-row {
+        .res-row {
             display: flex;
             justify-content: space-between;
-            margin-bottom: 8px;
+            margin-bottom: 10px;
             font-size: 0.95rem;
         }
 
-        .divider {
-            height: 1px;
-            background-color: #444;
-            margin: 10px 0;
-        }
+        .divider { height: 1px; background: #333; margin: 15px 0; }
 
-        .final-damage {
-            font-size: 1.1rem;
-            color: #ddd;
-        }
-
-        .outcome-box {
-            text-align: center;
-            font-size: 1.3rem;
+        .big-stat {
+            font-size: 1.4rem;
             font-weight: bold;
-            padding-top: 5px;
+            color: var(--accent);
         }
 
-        .win { color: var(--accent-color); }
-        .loss { color: var(--danger-color); }
-        
-        .small-text {
-            display: block;
-            font-size: 0.8rem;
-            font-weight: normal;
-            margin-top: 5px;
-            color: #aaa;
+        .prediction-box {
+            text-align: center;
+            background: rgba(255, 179, 0, 0.1);
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
         }
+
+        .tag {
+            font-size: 0.75rem;
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin-left: 5px;
+            text-transform: uppercase;
+        }
+        .tag-air { background: #4fc3f7; color: #000; }
+        .tag-tank { background: #ffb74d; color: #000; }
+        .tag-missile { background: #e57373; color: #000; }
+        .tag-weak { background: #00e676; color: #000; font-weight: bold; }
+
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2>☣️ Battle Calculator</h2>
-    
-    <div class="input-group">
-        <label>Your Squad Power</label>
-        <input type="number" id="squadPower" placeholder="e.g. 10000000">
-    </div>
+    <h2>☣️ Stronghold Planner S4</h2>
 
-    <div class="input-group">
-        <label>Your Virus Resistance</label>
-        <input type="number" id="myRes" placeholder="e.g. 2000">
-    </div>
-
-    <div class="input-group">
-        <label>Mob / Boss Required Resistance</label>
-        <input type="number" id="mobRes" placeholder="e.g. 3300">
-    </div>
-
-    <div class="input-group">
-        <label>Mob / Boss Power (Optional)</label>
-        <input type="number" id="bossPower" placeholder="e.g. 5000000">
-    </div>
-
-    <button onclick="calculateDamage()">Calculate Outcome</button>
-
-    <div id="results" class="result-box">
-        <div class="result-row">
-            <span>Missing Resistance:</span>
-            <span id="missingResVal">0</span>
+    <!-- Boss Configuration -->
+    <div style="background:#222; padding:15px; border-radius:8px; margin-bottom:20px;">
+        <label style="color:#fff; border-bottom:1px solid #444; padding-bottom:5px; margin-bottom:10px;">TARGET INTEL</label>
+        <div class="form-grid">
+            <div>
+                <label>Stronghold Level</label>
+                <select id="bossLevel" onchange="updateBossStats()">
+                    <option value="1">Lvl 1 (Oni Lv10)</option>
+                    <option value="2">Lvl 2 (Oni Lv20)</option>
+                    <option value="3">Lvl 3 (Oni Lv30)</option>
+                    <option value="4">Lvl 4 (Oni Lv40)</option>
+                    <option value="5">Lvl 5 (Oni Lv50)</option>
+                    <option value="6">Lvl 6 (Oni Lv60)</option>
+                </select>
+            </div>
+            <div>
+                <label>Boss Type</label>
+                <select id="bossType">
+                    <option value="Samurai">Samurai (Weak: Air)</option>
+                    <option value="Doji">Dōji (Weak: Tank)</option>
+                    <option value="Tengu">Tengu (Weak: Missile)</option>
+                </select>
+            </div>
+            <div>
+                <label>Required VR</label>
+                <input type="number" id="reqVR" readonly style="color:var(--accent); font-weight:bold;">
+            </div>
+            <div>
+                <label>Suggested Power</label>
+                <input type="text" id="suggestedPwr" readonly style="color:#aaa;">
+            </div>
         </div>
-        <div class="result-row">
-            <span>Damage Penalty:</span>
-            <span id="penaltyVal" style="color:var(--danger-color)">0%</span>
+    </div>
+
+    <!-- Player Stats -->
+    <div class="form-grid">
+        <div>
+            <label>My Squad Power</label>
+            <input type="number" id="myPower" placeholder="e.g. 20000000">
+        </div>
+        <div>
+            <label>My Squad Type</label>
+            <select id="myType">
+                <option value="Tank">Tank Squad</option>
+                <option value="Missile">Missile Squad</option>
+                <option value="Air">Aircraft Squad</option>
+            </select>
+        </div>
+        
+        <div>
+            <label>My Resistance</label>
+            <input type="number" id="myRes" placeholder="e.g. 3000">
+        </div>
+        <div>
+            <label>Rally Leader VR</label>
+            <input type="number" id="leaderRes" placeholder="Optional">
+        </div>
+    </div>
+
+    <!-- Buffs / Environment -->
+    <div class="form-grid">
+        <div class="full-width checkbox-group">
+            <label style="margin:0; width:100%;">Lighthouse Level</label>
+            <select id="lighthouse" style="width:50%;">
+                <option value="0">Level 0-2 (+150 VR)</option>
+                <option value="3">Level 3 (+250 VR, +3% Dmg)</option>
+                <option value="4">Level 4 (+250 VR, +5% Dmg)</option>
+            </select>
+        </div>
+        
+        <div class="checkbox-group">
+            <input type="checkbox" id="hasElectrician" checked>
+            <span>Have Electrician?</span>
+        </div>
+        <div class="checkbox-group">
+            <input type="checkbox" id="warFever">
+            <span>War Fever (+1%)</span>
+        </div>
+    </div>
+
+    <button class="btn" onclick="calculate()">CALCULATE DAMAGE</button>
+
+    <!-- Results -->
+    <div id="results" class="results">
+        <div class="res-row">
+            <span>Effective VR:</span>
+            <span id="resOut">0</span>
+        </div>
+        <div class="res-row">
+            <span>Virus Penalty:</span>
+            <span id="penaltyOut" style="color:var(--danger)">0%</span>
+        </div>
+        <div class="res-row">
+            <span>Type Counter:</span>
+            <span id="counterOut">None</span>
         </div>
         
         <div class="divider"></div>
 
-        <div class="result-row final-damage">
+        <div class="res-row" style="align-items:center">
             <span>Your Effective Power:</span>
-            <span id="effectivePowerVal" style="font-weight:bold;">0</span>
+            <span id="effPowerOut" class="big-stat">0</span>
         </div>
 
-        <!-- Outcome Section -->
-        <div id="outcomeSection" style="display:none;">
-            <div class="divider"></div>
-            <div class="outcome-box" id="outcomeText">VICTORY</div>
-            <span class="small-text" id="outcomeDiff" style="text-align:center;"></span>
+        <div class="prediction-box">
+            <div style="font-size:0.9rem; color:#aaa; margin-bottom:5px;">PREDICTED DAMAGE (1 HIT)</div>
+            <div id="hpDamageOut" style="font-size:2rem; font-weight:bold; color:#fff;">0%</div>
+            <div id="killPrediction" style="font-size:0.9rem; margin-top:5px;"></div>
         </div>
     </div>
 </div>
 
 <script>
-    function calculateDamage() {
-        // 1. Get Inputs
-        const squadPower = parseFloat(document.getElementById('squadPower').value);
-        const myRes = parseFloat(document.getElementById('myRes').value);
-        const mobRes = parseFloat(document.getElementById('mobRes').value);
-        // Boss power is optional, default to 0 if empty
-        const bossPower = parseFloat(document.getElementById('bossPower').value) || 0;
+    // Data from the image provided
+    const bossData = {
+        1: { vr: 3750, pwr: 19290500 },
+        2: { vr: 6250, pwr: 23266000 },
+        3: { vr: 8250, pwr: 29306000 },
+        4: { vr: 10000, pwr: 35973500 },
+        5: { vr: 11000, pwr: 43618500 },
+        6: { vr: 12000, pwr: 52435000 }
+    };
 
-        // Validation
-        if (isNaN(squadPower) || isNaN(myRes) || isNaN(mobRes)) {
-            alert("Please fill in your Squad Power and Resistance fields.");
-            return;
-        }
+    // Calibration: 25.4M Eff Power did 50% damage to Lvl 1 boss (19.2M suggested).
+    // This implies Lvl 1 HP Pool is roughly ~51,000,000 "Power Units".
+    // We scale this HP pool based on the boss Suggested Power growth.
+    const hpCalibration = 51000000; 
+    const basePwrLvl1 = 19290500;
 
-        // 2. Logic: Resistance Calculation
-        let missingRes = 0;
-        let penaltyPercent = 0;
-        let efficiency = 100;
-        
-        if (myRes < mobRes) {
-            missingRes = mobRes - myRes;
-            let missingRatio = missingRes / mobRes;
-            penaltyPercent = missingRatio * 2 * 100; 
-            if (penaltyPercent > 100) penaltyPercent = 100;
-            efficiency = 100 - penaltyPercent;
-        }
-
-        // 3. Logic: Effective Power Calculation
-        const effectivePower = squadPower * (efficiency / 100);
-
-        // 4. Update UI Basics
-        const resultBox = document.getElementById('results');
-        const formatNum = (num) => num.toLocaleString(undefined, {maximumFractionDigits: 0});
-
-        document.getElementById('missingResVal').innerText = formatNum(missingRes);
-        document.getElementById('penaltyVal').innerText = `-${penaltyPercent.toFixed(2)}%`;
-        
-        const effectiveEl = document.getElementById('effectivePowerVal');
-        effectiveEl.innerText = formatNum(effectivePower);
-
-        // 5. Logic: Win/Loss Calculation
-        const outcomeSection = document.getElementById('outcomeSection');
-        const outcomeText = document.getElementById('outcomeText');
-        const outcomeDiff = document.getElementById('outcomeDiff');
-
-        if (bossPower > 0) {
-            outcomeSection.style.display = 'block';
-            
-            if (effectivePower >= bossPower) {
-                // VICTORY
-                outcomeText.innerText = "LIKELY VICTORY";
-                outcomeText.className = "outcome-box win";
-                const surplus = effectivePower - bossPower;
-                outcomeDiff.innerText = `Power Surplus: +${formatNum(surplus)}`;
-                effectiveEl.style.color = 'var(--accent-color)';
-            } else {
-                // DEFEAT
-                outcomeText.innerText = "LIKELY DEFEAT";
-                outcomeText.className = "outcome-box loss";
-                const deficit = bossPower - effectivePower;
-                outcomeDiff.innerText = `Power Shortage: -${formatNum(deficit)}`;
-                effectiveEl.style.color = 'var(--danger-color)';
-            }
-        } else {
-            // Hide outcome if boss power isn't provided
-            outcomeSection.style.display = 'none';
-            effectiveEl.style.color = '#fff';
-        }
-
-        // Show results
-        resultBox.style.display = 'block';
+    function updateBossStats() {
+        const lvl = document.getElementById('bossLevel').value;
+        const data = bossData[lvl];
+        document.getElementById('reqVR').value = data.vr;
+        document.getElementById('suggestedPwr').value = data.pwr.toLocaleString();
     }
+
+    function calculate() {
+        // 1. Get Inputs
+        const lvl = parseInt(document.getElementById('bossLevel').value);
+        const bossType = document.getElementById('bossType').value;
+        const myPower = parseFloat(document.getElementById('myPower').value) || 0;
+        const myType = document.getElementById('myType').value;
+        const myRes = parseFloat(document.getElementById('myRes').value) || 0;
+        const leaderRes = parseFloat(document.getElementById('leaderRes').value) || 0;
+        const lighthouse = parseInt(document.getElementById('lighthouse').value);
+        const hasElectrician = document.getElementById('hasElectrician').checked;
+        const warFever = document.getElementById('warFever').checked;
+        
+        const reqVR = bossData[lvl].vr;
+
+        // 2. VR Calculation (Leader Carry + Lighthouse)
+        let lhVrBonus = (lighthouse >= 3) ? 250 : 150;
+        let effectiveVR = Math.max(myRes, leaderRes) + lhVrBonus;
+
+        // 3. Penalty Logic
+        let penaltyPct = 0;
+        if (effectiveVR < reqVR) {
+            let missing = reqVR - effectiveVR;
+            penaltyPct = (missing / reqVR) * 2; // 2% per 1% missing
+        }
+        if (penaltyPct > 1) penaltyPct = 1; // Cap at 100%
+        let vrEfficiency = 1 - penaltyPct;
+
+        // 4. Modifiers
+        let modifiers = 1.0;
+
+        // Lighthouse Morale
+        if (lighthouse === 3) modifiers += 0.03;
+        if (lighthouse === 4) modifiers += 0.05;
+
+        // War Fever
+        if (warFever) modifiers += 0.01;
+
+        // Darkness / Electrician
+        // If NO electrician, suffer massive penalty (Boss buffs +50% stats)
+        // Mathematically treating this as ~30% reduced damage output
+        if (!hasElectrician) modifiers *= 0.7;
+
+        // Unit Counter (Weakness)
+        let isCounter = false;
+        if (bossType === "Samurai" && myType === "Air") isCounter = true;
+        if (bossType === "Doji" && myType === "Tank") isCounter = true;
+        if (bossType === "Tengu" && myType === "Missile") isCounter = true;
+
+        if (isCounter) modifiers *= 1.2; // 20% Bonus
+
+        // 5. Final Power Calculation
+        const finalPower = myPower * vrEfficiency * modifiers;
+
+        // 6. HP % Prediction
+        // Calculate estimated Boss HP Pool based on level scaling
+        const bossScale = bossData[lvl].pwr / basePwrLvl1;
+        const estimatedBossHP = hpCalibration * bossScale;
+        
+        let damagePct = (finalPower / estimatedBossHP) * 100;
+        if (damagePct > 100) damagePct = 100;
+
+        // 7. Render
+        const resBox = document.getElementById('results');
+        resBox.style.display = 'block';
+
+        document.getElementById('resOut').innerHTML = `${effectiveVR} <span style="font-size:0.8rem; color:#888;">(Req: ${reqVR})</span>`;
+        
+        const penEl = document.getElementById('penaltyOut');
+        penEl.innerText = `-${(penaltyPct*100).toFixed(1)}%`;
+        penEl.style.color = penaltyPct > 0 ? 'var(--danger)' : 'var(--text-muted)';
+
+        const countEl = document.getElementById('counterOut');
+        if(isCounter) {
+            countEl.innerHTML = "<span class='tag tag-weak'>WEAKNESS EXPLOITED (+20%)</span>";
+        } else {
+            countEl.innerText = "Neutral";
+        }
+
+        document.getElementById('effPowerOut').innerText = finalPower.toLocaleString(undefined, {maximumFractionDigits: 0});
+        
+        // Color code the final HP result
+        const hpOut = document.getElementById('hpDamageOut');
+        hpOut.innerText = `~${damagePct.toFixed(1)}%`;
+        
+        let killText = "";
+        if(damagePct >= 100) {
+            hpOut.style.color = "var(--success)";
+            killText = "RESULT: INSTANT KILL 💀";
+        } else if (damagePct >= 50) {
+            hpOut.style.color = "var(--accent)";
+            killText = `RESULT: ${(100/damagePct).toFixed(1)} Hits to Kill`;
+        } else {
+            hpOut.style.color = "var(--danger)";
+            killText = `RESULT: ${(100/damagePct).toFixed(1)} Hits to Kill`;
+        }
+        document.getElementById('killPrediction').innerText = killText;
+    }
+
+    // Initialize
+    updateBossStats();
 </script>
 
 </body>
