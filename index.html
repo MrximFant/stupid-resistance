@@ -11,6 +11,7 @@
             --text-color: #ffffff;
             --accent-color: #00ff9d; /* Bright Green */
             --danger-color: #ff4d4d; /* Red */
+            --input-bg: #3d3d3d;
         }
 
         body {
@@ -38,6 +39,7 @@
             text-align: center;
             color: var(--accent-color);
             margin-bottom: 1.5rem;
+            margin-top: 0;
         }
 
         .input-group {
@@ -53,13 +55,13 @@
 
         input {
             width: 100%;
-            padding: 10px;
+            padding: 12px;
             border: 1px solid #444;
             border-radius: 6px;
-            background-color: #3d3d3d;
+            background-color: var(--input-bg);
             color: white;
             font-size: 1rem;
-            box-sizing: border-box; /* Ensures padding doesn't break width */
+            box-sizing: border-box;
         }
 
         input:focus {
@@ -69,12 +71,12 @@
 
         button {
             width: 100%;
-            padding: 12px;
+            padding: 14px;
             background-color: var(--accent-color);
             color: #1a1a1a;
             border: none;
             border-radius: 6px;
-            font-size: 1rem;
+            font-size: 1.1rem;
             font-weight: bold;
             cursor: pointer;
             transition: background 0.3s;
@@ -86,12 +88,12 @@
         }
 
         .result-box {
-            margin-top: 20px;
+            margin-top: 25px;
             padding: 15px;
             background-color: #222;
             border-radius: 6px;
             border-left: 4px solid #555;
-            display: none; /* Hidden by default */
+            display: none;
         }
 
         .result-row {
@@ -101,25 +103,40 @@
             font-size: 0.95rem;
         }
 
-        .final-damage {
-            font-size: 1.2rem;
-            font-weight: bold;
-            color: var(--accent-color);
-            border-top: 1px solid #444;
-            padding-top: 10px;
-            margin-top: 10px;
+        .divider {
+            height: 1px;
+            background-color: #444;
+            margin: 10px 0;
         }
 
-        .warning {
-            color: var(--danger-color);
+        .final-damage {
+            font-size: 1.1rem;
+            color: #ddd;
+        }
+
+        .outcome-box {
+            text-align: center;
+            font-size: 1.3rem;
             font-weight: bold;
+            padding-top: 5px;
+        }
+
+        .win { color: var(--accent-color); }
+        .loss { color: var(--danger-color); }
+        
+        .small-text {
+            display: block;
+            font-size: 0.8rem;
+            font-weight: normal;
+            margin-top: 5px;
+            color: #aaa;
         }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2>☣️ Damage Calculator</h2>
+    <h2>☣️ Battle Calculator</h2>
     
     <div class="input-group">
         <label>Your Squad Power</label>
@@ -136,7 +153,12 @@
         <input type="number" id="mobRes" placeholder="e.g. 3300">
     </div>
 
-    <button onclick="calculateDamage()">Calculate Damage</button>
+    <div class="input-group">
+        <label>Mob / Boss Power (Optional)</label>
+        <input type="number" id="bossPower" placeholder="e.g. 5000000">
+    </div>
+
+    <button onclick="calculateDamage()">Calculate Outcome</button>
 
     <div id="results" class="result-box">
         <div class="result-row">
@@ -145,15 +167,21 @@
         </div>
         <div class="result-row">
             <span>Damage Penalty:</span>
-            <span id="penaltyVal" class="warning">0%</span>
+            <span id="penaltyVal" style="color:var(--danger-color)">0%</span>
         </div>
-        <div class="result-row">
-            <span>Your Efficiency:</span>
-            <span id="efficiencyVal">100%</span>
-        </div>
+        
+        <div class="divider"></div>
+
         <div class="result-row final-damage">
-            <span>Effective Damage:</span>
-            <span id="effectivePowerVal">0</span>
+            <span>Your Effective Power:</span>
+            <span id="effectivePowerVal" style="font-weight:bold;">0</span>
+        </div>
+
+        <!-- Outcome Section -->
+        <div id="outcomeSection" style="display:none;">
+            <div class="divider"></div>
+            <div class="outcome-box" id="outcomeText">VICTORY</div>
+            <span class="small-text" id="outcomeDiff" style="text-align:center;"></span>
         </div>
     </div>
 </div>
@@ -164,61 +192,71 @@
         const squadPower = parseFloat(document.getElementById('squadPower').value);
         const myRes = parseFloat(document.getElementById('myRes').value);
         const mobRes = parseFloat(document.getElementById('mobRes').value);
+        // Boss power is optional, default to 0 if empty
+        const bossPower = parseFloat(document.getElementById('bossPower').value) || 0;
 
-        // Validation: Check if fields are empty
+        // Validation
         if (isNaN(squadPower) || isNaN(myRes) || isNaN(mobRes)) {
-            alert("Please fill in all fields with numbers.");
+            alert("Please fill in your Squad Power and Resistance fields.");
             return;
         }
 
-        // 2. The Logic
+        // 2. Logic: Resistance Calculation
         let missingRes = 0;
         let penaltyPercent = 0;
         let efficiency = 100;
         
-        // If your resistance is lower than the mob's
         if (myRes < mobRes) {
             missingRes = mobRes - myRes;
-            
-            // Formula: (Missing / Required) * 2
-            // Example: Missing 1300 on a 3300 mob = 0.39 * 2 = 0.78 (78% penalty)
             let missingRatio = missingRes / mobRes;
-            penaltyPercent = missingRatio * 2 * 100; // Convert to percentage
-            
-            // Cap the penalty at 100% (cannot do negative damage)
+            penaltyPercent = missingRatio * 2 * 100; 
             if (penaltyPercent > 100) penaltyPercent = 100;
-            
             efficiency = 100 - penaltyPercent;
         }
 
-        // 3. Calculate Effective Power
+        // 3. Logic: Effective Power Calculation
         const effectivePower = squadPower * (efficiency / 100);
 
-        // 4. Update UI
+        // 4. Update UI Basics
         const resultBox = document.getElementById('results');
-        const missingResVal = document.getElementById('missingResVal');
-        const penaltyVal = document.getElementById('penaltyVal');
-        const efficiencyVal = document.getElementById('efficiencyVal');
-        const effectivePowerVal = document.getElementById('effectivePowerVal');
-
-        // Helper to format numbers with commas (e.g. 1,000,000)
         const formatNum = (num) => num.toLocaleString(undefined, {maximumFractionDigits: 0});
 
-        missingResVal.innerText = formatNum(missingRes);
-        penaltyVal.innerText = `-${penaltyPercent.toFixed(2)}%`;
-        efficiencyVal.innerText = `${efficiency.toFixed(2)}%`;
-        effectivePowerVal.innerText = formatNum(effectivePower);
+        document.getElementById('missingResVal').innerText = formatNum(missingRes);
+        document.getElementById('penaltyVal').innerText = `-${penaltyPercent.toFixed(2)}%`;
+        
+        const effectiveEl = document.getElementById('effectivePowerVal');
+        effectiveEl.innerText = formatNum(effectivePower);
 
-        // Change colors based on result
-        if (penaltyPercent > 0) {
-            effectivePowerVal.style.color = '#ff4d4d'; // Red if penalized
-            penaltyVal.style.display = 'block';
+        // 5. Logic: Win/Loss Calculation
+        const outcomeSection = document.getElementById('outcomeSection');
+        const outcomeText = document.getElementById('outcomeText');
+        const outcomeDiff = document.getElementById('outcomeDiff');
+
+        if (bossPower > 0) {
+            outcomeSection.style.display = 'block';
+            
+            if (effectivePower >= bossPower) {
+                // VICTORY
+                outcomeText.innerText = "LIKELY VICTORY";
+                outcomeText.className = "outcome-box win";
+                const surplus = effectivePower - bossPower;
+                outcomeDiff.innerText = `Power Surplus: +${formatNum(surplus)}`;
+                effectiveEl.style.color = 'var(--accent-color)';
+            } else {
+                // DEFEAT
+                outcomeText.innerText = "LIKELY DEFEAT";
+                outcomeText.className = "outcome-box loss";
+                const deficit = bossPower - effectivePower;
+                outcomeDiff.innerText = `Power Shortage: -${formatNum(deficit)}`;
+                effectiveEl.style.color = 'var(--danger-color)';
+            }
         } else {
-            effectivePowerVal.style.color = '#00ff9d'; // Green if full power
-            penaltyVal.innerText = "None";
+            // Hide outcome if boss power isn't provided
+            outcomeSection.style.display = 'none';
+            effectiveEl.style.color = '#fff';
         }
 
-        // Show result box
+        // Show results
         resultBox.style.display = 'block';
     }
 </script>
