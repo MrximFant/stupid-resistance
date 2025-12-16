@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Virus Resistance Damage Calculator</title>
+    <style>
+        :root {
+            --bg-color: #1a1a1a;
+            --card-bg: #2d2d2d;
+            --text-color: #ffffff;
+            --accent-color: #00ff9d; /* Bright Green */
+            --danger-color: #ff4d4d; /* Red */
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            background-color: var(--card-bg);
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            max-width: 400px;
+            width: 100%;
+        }
+
+        h2 {
+            text-align: center;
+            color: var(--accent-color);
+            margin-bottom: 1.5rem;
+        }
+
+        .input-group {
+            margin-bottom: 1.2rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+            color: #ccc;
+        }
+
+        input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #444;
+            border-radius: 6px;
+            background-color: #3d3d3d;
+            color: white;
+            font-size: 1rem;
+            box-sizing: border-box; /* Ensures padding doesn't break width */
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--accent-color);
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background-color: var(--accent-color);
+            color: #1a1a1a;
+            border: none;
+            border-radius: 6px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.3s;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            background-color: #00cc7a;
+        }
+
+        .result-box {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #222;
+            border-radius: 6px;
+            border-left: 4px solid #555;
+            display: none; /* Hidden by default */
+        }
+
+        .result-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 0.95rem;
+        }
+
+        .final-damage {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: var(--accent-color);
+            border-top: 1px solid #444;
+            padding-top: 10px;
+            margin-top: 10px;
+        }
+
+        .warning {
+            color: var(--danger-color);
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>☣️ Damage Calculator</h2>
+    
+    <div class="input-group">
+        <label>Your Squad Power</label>
+        <input type="number" id="squadPower" placeholder="e.g. 10000000">
+    </div>
+
+    <div class="input-group">
+        <label>Your Virus Resistance</label>
+        <input type="number" id="myRes" placeholder="e.g. 2000">
+    </div>
+
+    <div class="input-group">
+        <label>Mob / Boss Required Resistance</label>
+        <input type="number" id="mobRes" placeholder="e.g. 3300">
+    </div>
+
+    <button onclick="calculateDamage()">Calculate Damage</button>
+
+    <div id="results" class="result-box">
+        <div class="result-row">
+            <span>Missing Resistance:</span>
+            <span id="missingResVal">0</span>
+        </div>
+        <div class="result-row">
+            <span>Damage Penalty:</span>
+            <span id="penaltyVal" class="warning">0%</span>
+        </div>
+        <div class="result-row">
+            <span>Your Efficiency:</span>
+            <span id="efficiencyVal">100%</span>
+        </div>
+        <div class="result-row final-damage">
+            <span>Effective Damage:</span>
+            <span id="effectivePowerVal">0</span>
+        </div>
+    </div>
+</div>
+
+<script>
+    function calculateDamage() {
+        // 1. Get Inputs
+        const squadPower = parseFloat(document.getElementById('squadPower').value);
+        const myRes = parseFloat(document.getElementById('myRes').value);
+        const mobRes = parseFloat(document.getElementById('mobRes').value);
+
+        // Validation: Check if fields are empty
+        if (isNaN(squadPower) || isNaN(myRes) || isNaN(mobRes)) {
+            alert("Please fill in all fields with numbers.");
+            return;
+        }
+
+        // 2. The Logic
+        let missingRes = 0;
+        let penaltyPercent = 0;
+        let efficiency = 100;
+        
+        // If your resistance is lower than the mob's
+        if (myRes < mobRes) {
+            missingRes = mobRes - myRes;
+            
+            // Formula: (Missing / Required) * 2
+            // Example: Missing 1300 on a 3300 mob = 0.39 * 2 = 0.78 (78% penalty)
+            let missingRatio = missingRes / mobRes;
+            penaltyPercent = missingRatio * 2 * 100; // Convert to percentage
+            
+            // Cap the penalty at 100% (cannot do negative damage)
+            if (penaltyPercent > 100) penaltyPercent = 100;
+            
+            efficiency = 100 - penaltyPercent;
+        }
+
+        // 3. Calculate Effective Power
+        const effectivePower = squadPower * (efficiency / 100);
+
+        // 4. Update UI
+        const resultBox = document.getElementById('results');
+        const missingResVal = document.getElementById('missingResVal');
+        const penaltyVal = document.getElementById('penaltyVal');
+        const efficiencyVal = document.getElementById('efficiencyVal');
+        const effectivePowerVal = document.getElementById('effectivePowerVal');
+
+        // Helper to format numbers with commas (e.g. 1,000,000)
+        const formatNum = (num) => num.toLocaleString(undefined, {maximumFractionDigits: 0});
+
+        missingResVal.innerText = formatNum(missingRes);
+        penaltyVal.innerText = `-${penaltyPercent.toFixed(2)}%`;
+        efficiencyVal.innerText = `${efficiency.toFixed(2)}%`;
+        effectivePowerVal.innerText = formatNum(effectivePower);
+
+        // Change colors based on result
+        if (penaltyPercent > 0) {
+            effectivePowerVal.style.color = '#ff4d4d'; // Red if penalized
+            penaltyVal.style.display = 'block';
+        } else {
+            effectivePowerVal.style.color = '#00ff9d'; // Green if full power
+            penaltyVal.innerText = "None";
+        }
+
+        // Show result box
+        resultBox.style.display = 'block';
+    }
+</script>
+
+</body>
+</html>
