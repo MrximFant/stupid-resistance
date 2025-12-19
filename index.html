@@ -3,288 +3,293 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Season 4 Stronghold Calculator</title>
+    <title>S4 Battle Calculator</title>
     <style>
         :root {
-            --bg-color: #0f0f13;
-            --card-bg: #1b1b22;
-            --input-bg: #2a2a35;
-            --text-main: #e0e0e0;
-            --text-muted: #888;
-            --accent: #ffb300; /* Gold/Amber for Season 4 */
-            --danger: #ff4444;
-            --success: #00e676;
+            --bg: #121212;
+            --panel: #1e1e24;
+            --input: #2b2b36;
+            --text: #e0e0e0;
+            --accent: #ffb700; /* Gold */
+            --green: #00e676;
+            --red: #ff3d3d;
+            --blue: #2979ff;
             --border: #333;
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-main);
-            margin: 0;
-            padding: 20px;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
             display: flex;
             justify-content: center;
+            padding: 20px;
+            margin: 0;
+            min-height: 100vh;
         }
 
         .container {
             width: 100%;
-            max-width: 600px;
-            background-color: var(--card-bg);
-            padding: 25px;
-            border-radius: 16px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            max-width: 500px;
+            background-color: var(--panel);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.6);
             border: 1px solid var(--border);
         }
 
-        h2 {
-            text-align: center;
-            color: var(--accent);
-            margin-top: 0;
-            text-transform: uppercase;
+        h2 { 
+            text-align: center; 
+            color: var(--accent); 
+            margin: 0 0 20px 0; 
+            text-transform: uppercase; 
             letter-spacing: 1px;
-            font-size: 1.5rem;
+            font-size: 1.4rem;
         }
 
-        /* Grid Layout for Form */
-        .form-grid {
+        .section-label {
+            font-size: 0.75rem;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+            border-bottom: 1px solid #333;
+            padding-bottom: 4px;
+        }
+
+        .grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 15px;
+            gap: 12px;
+            margin-bottom: 15px;
+        }
+
+        .full { grid-column: span 2; }
+
+        label { display: block; font-size: 0.85rem; color: #aaa; margin-bottom: 4px; }
+
+        input, select {
+            width: 100%;
+            padding: 10px;
+            background: var(--input);
+            border: 1px solid #444;
+            color: white;
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-size: 0.95rem;
+            transition: border 0.2s;
+        }
+        
+        input:focus, select:focus { outline: none; border-color: var(--accent); }
+
+        /* Checkboxes */
+        .check-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
             margin-bottom: 20px;
         }
-        
-        .full-width { grid-column: span 2; }
 
-        label {
-            display: block;
-            font-size: 0.85rem;
-            color: var(--text-muted);
-            margin-bottom: 5px;
-        }
-
-        select, input {
-            width: 100%;
-            padding: 12px;
-            background-color: var(--input-bg);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            color: white;
-            font-size: 1rem;
-            box-sizing: border-box;
-        }
-        
-        select:focus, input:focus {
-            outline: none;
-            border-color: var(--accent);
-        }
-
-        /* Checkbox styling */
-        .checkbox-group {
+        .check-item {
             display: flex;
             align-items: center;
-            gap: 10px;
-            background: var(--input-bg);
-            padding: 10px;
-            border-radius: 8px;
+            gap: 8px;
+            background: var(--input);
+            padding: 8px 12px;
+            border-radius: 6px;
             cursor: pointer;
-            transition: background 0.2s;
+            font-size: 0.9rem;
+            border: 1px solid transparent;
         }
-        .checkbox-group:hover { background: #333; }
-        .checkbox-group input { width: auto; cursor: pointer; }
-        .checkbox-group span { font-size: 0.9rem; cursor: pointer; }
+        .check-item:hover { border-color: #555; }
+        .check-item input { width: auto; margin: 0; }
 
-        /* Buttons */
-        .btn {
+        /* Action Button */
+        .btn-main {
             width: 100%;
-            padding: 15px;
-            background-color: var(--accent);
+            padding: 14px;
+            background: linear-gradient(135deg, var(--accent), #ff9100);
             color: #000;
-            font-weight: bold;
+            font-weight: 800;
             border: none;
-            border-radius: 8px;
+            border-radius: 6px;
             font-size: 1.1rem;
             cursor: pointer;
-            transition: 0.2s;
-            margin-top: 10px;
+            text-transform: uppercase;
+            box-shadow: 0 4px 15px rgba(255, 183, 0, 0.3);
+            transition: transform 0.1s;
         }
-        .btn:hover { background-color: #ffca28; }
+        .btn-main:active { transform: scale(0.98); }
 
-        /* Results Area */
+        /* Results */
         .results {
-            background-color: #121214;
             margin-top: 25px;
-            border-radius: 10px;
+            background: #151518;
+            border-radius: 8px;
             padding: 20px;
-            display: none; /* Hidden by default */
-            border-left: 5px solid var(--accent);
+            display: none;
+            border: 1px solid #333;
         }
 
-        .res-row {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 10px;
-            font-size: 0.95rem;
+        .res-row { 
+            display: flex; 
+            justify-content: space-between; 
+            margin-bottom: 10px; 
+            font-size: 0.95rem; 
         }
-
+        .res-val { font-weight: bold; color: white; }
         .divider { height: 1px; background: #333; margin: 15px 0; }
 
-        .big-stat {
-            font-size: 1.4rem;
-            font-weight: bold;
-            color: var(--accent);
-        }
+        .big-text { font-size: 1.3rem; color: white; font-weight: bold; }
+        .sub-text { font-size: 0.85rem; color: #888; }
 
-        .prediction-box {
+        .outcome-box {
             text-align: center;
-            background: rgba(255, 179, 0, 0.1);
             padding: 15px;
             border-radius: 8px;
             margin-top: 15px;
+            border: 1px solid #333;
         }
+        .win { background: rgba(0, 230, 118, 0.08); border-color: var(--green); color: var(--green); }
+        .loss { background: rgba(255, 61, 61, 0.08); border-color: var(--red); color: var(--red); }
 
-        .tag {
-            font-size: 0.75rem;
+        .badge {
+            font-size: 0.7rem;
             padding: 2px 6px;
             border-radius: 4px;
-            margin-left: 5px;
+            margin-left: 6px;
             text-transform: uppercase;
+            font-weight: bold;
         }
-        .tag-weak { background: #00e676; color: #000; font-weight: bold; }
+        .badge-good { background: var(--green); color: #000; }
+        .badge-bad { background: var(--red); color: white; }
 
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2>☣️ Stronghold Planner S4</h2>
+    <h2>☣️ S4 Battle Sim</h2>
 
-    <!-- Boss Configuration -->
-    <div style="background:#222; padding:15px; border-radius:8px; margin-bottom:20px;">
-        <label style="color:#fff; border-bottom:1px solid #444; padding-bottom:5px; margin-bottom:10px;">TARGET INTEL</label>
-        <div class="form-grid">
-            <div>
-                <label>Stronghold Level</label>
-                <select id="bossLevel" onchange="updateBossStats()">
-                    <option value="1">Lvl 1 (Oni Lv10)</option>
-                    <option value="2">Lvl 2 (Oni Lv20)</option>
-                    <option value="3">Lvl 3 (Oni Lv30)</option>
-                    <option value="4">Lvl 4 (Oni Lv40)</option>
-                    <option value="5">Lvl 5 (Oni Lv50)</option>
-                    <option value="6">Lvl 6 (Oni Lv60)</option>
-                </select>
-            </div>
-            <div>
-                <label>Boss Type</label>
-                <select id="bossType">
-                    <option value="Samurai">Samurai (Weak: Air)</option>
-                    <option value="Doji">Dōji (Weak: Tank)</option>
-                    <option value="Tengu">Tengu (Weak: Missile)</option>
-                </select>
-            </div>
-            <div>
-                <label>Required VR</label>
-                <input type="number" id="reqVR" readonly style="color:var(--accent); font-weight:bold;">
-            </div>
-            <div>
-                <label>Suggested Power</label>
-                <input type="text" id="suggestedPwr" readonly style="color:#aaa;">
-            </div>
+    <!-- Section 1: Target -->
+    <div class="section-label">Target Intel</div>
+    <div class="grid">
+        <div>
+            <label>Boss Level</label>
+            <select id="bossLevel" onchange="updateBossStats()">
+                <option value="1">Lvl 1 (Oni Lv10)</option>
+                <option value="2">Lvl 2 (Oni Lv20)</option>
+                <option value="3">Lvl 3 (Oni Lv30)</option>
+                <option value="4">Lvl 4 (Oni Lv40)</option>
+                <option value="5">Lvl 5 (Oni Lv50)</option>
+                <option value="6">Lvl 6 (Oni Lv60)</option>
+            </select>
+        </div>
+        <div>
+            <label>Boss Name</label>
+            <select id="bossType">
+                <option value="Samurai">Oni Samurai</option>
+                <option value="Doji">Oni Dōji</option>
+                <option value="Tengu">Oni Tengu</option>
+            </select>
+        </div>
+        <div>
+            <label>Required VR</label>
+            <input type="number" id="reqVR" readonly style="color:var(--accent);">
+        </div>
+        <div>
+            <label>Base Defense</label>
+            <input type="text" id="bossPwrDisplay" readonly style="color:#888;">
         </div>
     </div>
 
-    <!-- Player Stats -->
-    <div class="form-grid">
-        <div>
+    <!-- Section 2: Player -->
+    <div class="section-label">Squad Config</div>
+    <div class="grid">
+        <div class="full">
             <label>My Squad Power</label>
-            <input type="number" id="myPower" placeholder="e.g. 20000000">
+            <input type="number" id="myPower" placeholder="e.g. 45000000">
         </div>
         <div>
             <label>My Squad Type</label>
             <select id="myType">
-                <option value="Tank">Tank Squad</option>
-                <option value="Missile">Missile Squad</option>
-                <option value="Air">Aircraft Squad</option>
+                <option value="Tank">Tank 🛡️</option>
+                <option value="Missile">Missile 🚀</option>
+                <option value="Air">Aircraft 🚁</option>
             </select>
         </div>
-        
-        <!-- CHANGED: Replaced Manual Input with Building Level Dropdown -->
         <div>
-            <label>Optoelectronics Level</label>
-            <select id="buildingLevel">
-                <!-- Javascript will populate this -->
-            </select>
+            <label>Building Level</label>
+            <select id="buildingLevel"></select>
         </div>
-        
-        <div>
-            <label>Rally Leader VR</label>
-            <input type="number" id="leaderRes" placeholder="Optional">
+        <div class="full">
+            <label>Rally Leader VR (Optional)</label>
+            <input type="number" id="leaderRes" placeholder="Leave empty if solo or you are leader">
         </div>
     </div>
 
-    <!-- Buffs / Environment -->
-    <div class="form-grid">
-        <div class="full-width checkbox-group">
-            <label style="margin:0; width:100%;">Lighthouse Level</label>
-            <select id="lighthouse" style="width:50%;">
-                <option value="0">Level 0-2 (+150 VR)</option>
-                <option value="3">Level 3 (+250 VR, +3% Dmg)</option>
-                <option value="4">Level 4 (+250 VR, +5% Dmg)</option>
+    <!-- Section 3: Buffs -->
+    <div class="section-label">Environment</div>
+    <div class="check-grid">
+        <div class="check-item" style="grid-column: span 2">
+            <label style="margin:0; width:100px; cursor:pointer;">Lighthouse:</label>
+            <select id="lighthouse" style="width: auto; flex-grow: 1; padding:6px;">
+                <option value="0">Lv 0-2 (+150 VR)</option>
+                <option value="3">Lv 3 (+250 VR, +3% Atk)</option>
+                <option value="4">Lv 4 (+250 VR, +5% Atk)</option>
             </select>
         </div>
-        
-        <div class="checkbox-group" style="border: 1px solid var(--accent);">
-            <input type="checkbox" id="activeCard">
-            <span style="color:var(--accent); font-weight:bold;">Use Active Card (+250 VR)</span>
-        </div>
-
-        <div class="checkbox-group">
-            <input type="checkbox" id="hasElectrician" checked>
-            <span>Have Electrician?</span>
-        </div>
-        
-        <div class="checkbox-group">
-            <input type="checkbox" id="warFever">
-            <span>War Fever (+1%)</span>
-        </div>
+        <label class="check-item">
+            <input type="checkbox" id="activeCard"> <span>Active Card (+250)</span>
+        </label>
+        <label class="check-item">
+            <input type="checkbox" id="hasElectrician" checked> <span>Electrician?</span>
+        </label>
+        <label class="check-item">
+            <input type="checkbox" id="warFever"> <span>War Fever (+1%)</span>
+        </label>
+        <label class="check-item">
+            <input type="checkbox" id="megaBuff"> <span>Mega Buff (+5%)</span>
+        </label>
     </div>
 
-    <button class="btn" onclick="calculate()">CALCULATE DAMAGE</button>
+    <button class="btn-main" onclick="calculate()">Analyze Battle</button>
 
     <!-- Results -->
     <div id="results" class="results">
         <div class="res-row">
             <span>Effective VR:</span>
-            <span id="resOut">0</span>
+            <span class="res-val" id="resOut">0</span>
         </div>
         <div class="res-row">
-            <span>Virus Penalty:</span>
-            <span id="penaltyOut" style="color:var(--danger)">0%</span>
+            <span>Resistance Penalty:</span>
+            <span class="res-val" id="penaltyOut" style="color:var(--red)">0%</span>
         </div>
         <div class="res-row">
-            <span>Type Counter:</span>
-            <span id="counterOut">None</span>
+            <span>Type Matchup:</span>
+            <span class="res-val" id="counterOut">Neutral</span>
         </div>
         
         <div class="divider"></div>
 
-        <div class="res-row" style="align-items:center">
-            <span>Your Effective Power:</span>
-            <span id="effPowerOut" class="big-stat">0</span>
+        <div class="res-row" style="align-items: center;">
+            <span class="sub-text">Your Final Power:</span>
+            <span class="big-text" id="effPowerOut">0</span>
+        </div>
+        <div class="res-row">
+            <span class="sub-text">Safety Threshold:</span>
+            <span class="res-val" id="thresholdOut" style="color:#888;">0</span>
         </div>
 
-        <div class="prediction-box">
-            <div style="font-size:0.9rem; color:#aaa; margin-bottom:5px;">PREDICTED DAMAGE (1 HIT)</div>
-            <div id="hpDamageOut" style="font-size:2rem; font-weight:bold; color:#fff;">0%</div>
-            <div id="killPrediction" style="font-size:0.9rem; margin-top:5px;"></div>
+        <div id="predictionBox" class="outcome-box">
+            <div id="outcomeTitle" style="font-size:1.4rem; font-weight:bold; margin-bottom:5px;">--</div>
+            <div id="outcomeDesc" style="font-size:0.9rem;">--</div>
         </div>
     </div>
 </div>
 
 <script>
-    // --- DATA SETUP ---
-    
-    // Boss Data from previous step
+    // --- DATABASE ---
     const bossData = {
         1: { vr: 3750, pwr: 19290500 },
         2: { vr: 6250, pwr: 23266000 },
@@ -294,8 +299,16 @@
         6: { vr: 12000, pwr: 52435000 }
     };
 
-    // Optoelectronics Building Data (Level 1-35)
-    // Format: [Level, Resistance]
+    // Boss Elemental Logic (Derived from reports)
+    // Samurai = Weak to Air -> Is Tank
+    // Doji = Weak to Tank -> Is Missile
+    // Tengu = Weak to Missile -> Is Air
+    const bossArchetypes = {
+        'Samurai': 'Tank',
+        'Doji': 'Missile',
+        'Tengu': 'Air'
+    };
+
     const buildingLevels = [
         { lv: 1, vr: 100 }, { lv: 2, vr: 200 }, { lv: 3, vr: 300 }, { lv: 4, vr: 400 }, 
         { lv: 5, vr: 500 }, { lv: 6, vr: 750 }, { lv: 7, vr: 1000 }, { lv: 8, vr: 1250 }, 
@@ -308,130 +321,136 @@
         { lv: 33, vr: 11500 }, { lv: 34, vr: 12000 }, { lv: 35, vr: 13000 }
     ];
 
-    // HP Calibration
-    const hpCalibration = 51000000; 
-    const basePwrLvl1 = 19290500;
-
-    // --- INITIALIZATION ---
-
-    // Populate the Building Level Dropdown
-    function initDropdown() {
-        const select = document.getElementById('buildingLevel');
-        buildingLevels.forEach(item => {
-            const option = document.createElement('option');
-            option.value = item.vr;
-            option.text = `Level ${item.lv} (VR: ${item.vr.toLocaleString()})`;
-            select.appendChild(option);
+    // --- SETUP ---
+    function init() {
+        const sel = document.getElementById('buildingLevel');
+        buildingLevels.forEach(b => {
+            let opt = document.createElement('option');
+            opt.value = b.vr;
+            opt.text = `Level ${b.lv} (${b.vr.toLocaleString()} VR)`;
+            sel.add(opt);
         });
-        // Default to Level 10 or similar reasonable starting point
-        select.value = 1750; 
+        sel.value = 5000; 
+        updateBossStats();
     }
 
     function updateBossStats() {
         const lvl = document.getElementById('bossLevel').value;
-        const data = bossData[lvl];
-        document.getElementById('reqVR').value = data.vr;
-        document.getElementById('suggestedPwr').value = data.pwr.toLocaleString();
+        document.getElementById('reqVR').value = bossData[lvl].vr;
+        document.getElementById('bossPwrDisplay').value = bossData[lvl].pwr.toLocaleString();
     }
 
-    // --- CALCULATION LOGIC ---
-
+    // --- LOGIC ---
     function calculate() {
-        // 1. Get Inputs
         const lvl = parseInt(document.getElementById('bossLevel').value);
-        const bossType = document.getElementById('bossType').value;
+        const bossName = document.getElementById('bossType').value;
         const myPower = parseFloat(document.getElementById('myPower').value) || 0;
         const myType = document.getElementById('myType').value;
-        
-        // Changed: Get Resistance from the Building Dropdown value
-        const myRes = parseInt(document.getElementById('buildingLevel').value) || 0;
-        
+        const buildingVR = parseInt(document.getElementById('buildingLevel').value) || 0;
         const leaderRes = parseFloat(document.getElementById('leaderRes').value) || 0;
+        
+        // Buffs
         const lighthouse = parseInt(document.getElementById('lighthouse').value);
-        const hasElectrician = document.getElementById('hasElectrician').checked;
+        const card = document.getElementById('activeCard').checked;
+        const electrician = document.getElementById('hasElectrician').checked;
         const warFever = document.getElementById('warFever').checked;
-        const activeCard = document.getElementById('activeCard').checked;
-        
+        const megaBuff = document.getElementById('megaBuff').checked;
+
         const reqVR = bossData[lvl].vr;
+        const bossPwr = bossData[lvl].pwr;
 
-        // 2. VR Calculation
-        let lhVrBonus = (lighthouse >= 3) ? 250 : 150;
-        let cardBonus = activeCard ? 250 : 0;
-        
-        let effectiveVR = Math.max(myRes, leaderRes) + lhVrBonus + cardBonus;
+        // 1. Calculate VR
+        let lhBonus = (lighthouse >= 3) ? 250 : 150;
+        let cardBonus = card ? 250 : 0;
+        let finalVR = Math.max(buildingVR, leaderRes) + lhBonus + cardBonus;
 
-        // 3. Penalty Logic
+        // 2. Penalty (2.1x)
         let penaltyPct = 0;
-        if (effectiveVR < reqVR) {
-            let missing = reqVR - effectiveVR;
-            penaltyPct = (missing / reqVR) * 2;
+        if (finalVR < reqVR) {
+            let missingPct = (reqVR - finalVR) / reqVR;
+            penaltyPct = missingPct * 2.1; 
         }
-        if (penaltyPct > 1) penaltyPct = 1; 
-        let vrEfficiency = 1 - penaltyPct;
-
-        // 4. Modifiers
-        let modifiers = 1.0;
-        if (lighthouse === 3) modifiers += 0.03;
-        if (lighthouse === 4) modifiers += 0.05;
-        if (warFever) modifiers += 0.01;
-        if (!hasElectrician) modifiers *= 0.7;
-
-        // Unit Counter
-        let isCounter = false;
-        if (bossType === "Samurai" && myType === "Air") isCounter = true;
-        if (bossType === "Doji" && myType === "Tank") isCounter = true;
-        if (bossType === "Tengu" && myType === "Missile") isCounter = true;
-        if (isCounter) modifiers *= 1.2;
-
-        // 5. Final Power Calculation
-        const finalPower = myPower * vrEfficiency * modifiers;
-
-        // 6. HP % Prediction
-        const bossScale = bossData[lvl].pwr / basePwrLvl1;
-        const estimatedBossHP = hpCalibration * bossScale;
+        if (penaltyPct > 1) penaltyPct = 1;
         
-        let damagePct = (finalPower / estimatedBossHP) * 100;
-        if (damagePct > 100) damagePct = 100;
+        // 3. Modifiers
+        let mods = 1.0;
+        if (lighthouse === 3) mods += 0.03;
+        if (lighthouse === 4) mods += 0.05;
+        if (warFever) mods += 0.01;
+        if (megaBuff) mods += 0.05;
+        if (!electrician) mods *= 0.7;
+
+        // 4. Counter Logic (Rock Paper Scissors)
+        // Tank > Missile > Air > Tank
+        let bossElement = bossArchetypes[bossName];
+        let counterBonus = 0; // 0=Neutral, 1=Good, -1=Bad
+
+        if (myType === bossElement) {
+            counterBonus = 0; // Neutral
+        } else if (
+            (myType === 'Tank' && bossElement === 'Missile') ||
+            (myType === 'Missile' && bossElement === 'Air') ||
+            (myType === 'Air' && bossElement === 'Tank')
+        ) {
+            counterBonus = 1; // You counter the boss
+            mods *= 1.2;
+        } else {
+            counterBonus = -1; // Boss counters you
+            mods *= 0.8; 
+        }
+
+        // 5. Final Power
+        let effectivePower = myPower * (1 - penaltyPct) * mods;
+
+        // 6. Threshold (Häl Rule: Neutral match needs ~1.25x Boss Power to guarantee kill)
+        // If you counter the boss, the threshold is lower (1.0x).
+        // If you are countered, you need more raw power to overcome stats.
+        let safetyFactor = 1.25; 
+        if (counterBonus === 1) safetyFactor = 1.05; // Advantage means you just need to match power
+        if (counterBonus === -1) safetyFactor = 1.4; // Disadvantage means you need massive overpower
+
+        let winThreshold = bossPwr * safetyFactor;
 
         // 7. Render
-        const resBox = document.getElementById('results');
-        resBox.style.display = 'block';
-
-        document.getElementById('resOut').innerHTML = `${effectiveVR} <span style="font-size:0.8rem; color:#888;">(Req: ${reqVR})</span>`;
+        document.getElementById('results').style.display = 'block';
+        document.getElementById('resOut').innerHTML = `${finalVR.toLocaleString()} <span style="font-size:0.8rem; color:#888;">/ ${reqVR}</span>`;
         
-        const penEl = document.getElementById('penaltyOut');
+        let penEl = document.getElementById('penaltyOut');
         penEl.innerText = `-${(penaltyPct*100).toFixed(1)}%`;
-        penEl.style.color = penaltyPct > 0 ? 'var(--danger)' : 'var(--text-muted)';
+        penEl.style.color = penaltyPct > 0 ? 'var(--red)' : '#888';
 
-        const countEl = document.getElementById('counterOut');
-        if(isCounter) {
-            countEl.innerHTML = "<span class='tag tag-weak'>WEAKNESS EXPLOITED (+20%)</span>";
-        } else {
-            countEl.innerText = "Neutral";
-        }
+        let countEl = document.getElementById('counterOut');
+        if (counterBonus === 1) countEl.innerHTML = "Advantage <span class='badge badge-good'>+20%</span>";
+        else if (counterBonus === -1) countEl.innerHTML = "Disadvantage <span class='badge badge-bad'>-20%</span>";
+        else countEl.innerText = "Neutral";
 
-        document.getElementById('effPowerOut').innerText = finalPower.toLocaleString(undefined, {maximumFractionDigits: 0});
-        
-        const hpOut = document.getElementById('hpDamageOut');
-        hpOut.innerText = `~${damagePct.toFixed(1)}%`;
-        
-        let killText = "";
-        if(damagePct >= 100) {
-            hpOut.style.color = "var(--success)";
-            killText = "RESULT: INSTANT KILL 💀";
-        } else if (damagePct >= 50) {
-            hpOut.style.color = "var(--accent)";
-            killText = `RESULT: ${(100/damagePct).toFixed(1)} Hits to Kill`;
+        document.getElementById('effPowerOut').innerText = effectivePower.toLocaleString(undefined, {maximumFractionDigits:0});
+        document.getElementById('thresholdOut').innerText = winThreshold.toLocaleString(undefined, {maximumFractionDigits:0});
+
+        // 8. Prediction
+        let box = document.getElementById('predictionBox');
+        let title = document.getElementById('outcomeTitle');
+        let desc = document.getElementById('outcomeDesc');
+
+        if (effectivePower >= winThreshold) {
+            box.className = "outcome-box win";
+            title.innerText = "VICTORY";
+            let ratio = (effectivePower / bossPwr).toFixed(2);
+            desc.innerText = `Power Ratio: ${ratio}x vs Boss. You will clear the stack.`;
+        } else if (effectivePower >= bossPwr) {
+             // Between 1.0x and Safety Threshold (The "Häl Zone")
+            box.className = "outcome-box loss";
+            title.innerText = "RISKY / FAILURE";
+            desc.innerText = `You have the power, but RNG or Counters might make you miss by <1%. Need more power to be safe.`;
         } else {
-            hpOut.style.color = "var(--danger)";
-            killText = `RESULT: ${(100/damagePct).toFixed(1)} Hits to Kill`;
+            box.className = "outcome-box loss";
+            title.innerText = "DEFEAT";
+            let diff = ((bossPwr - effectivePower)/1000000).toFixed(1);
+            desc.innerText = `You are weak. Missing ${diff}M power to scratch the boss.`;
         }
-        document.getElementById('killPrediction').innerText = killText;
     }
 
-    // Initialize Tool
-    initDropdown();
-    updateBossStats();
+    init();
 </script>
 
 </body>
