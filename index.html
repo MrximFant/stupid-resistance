@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>S4 Rally Simulator (Multi-Round)</title>
+    <title>S4 Rally Simulator</title>
     <style>
         :root {
             --bg: #121212;
@@ -13,7 +13,6 @@
             --accent: #ffb700; /* Gold */
             --green: #00e676;
             --red: #ff3d3d;
-            --blue: #2979ff;
             --border: #333;
         }
 
@@ -44,9 +43,9 @@
             margin: 0 0 20px 0; 
             text-transform: uppercase; 
             letter-spacing: 1px;
-            font-size: 1.4rem;
         }
 
+        /* Sections */
         .section-header {
             background: #2a2a30;
             padding: 10px;
@@ -105,7 +104,6 @@
         .res-win { background: rgba(0, 230, 118, 0.2); color: var(--green); border: 1px solid var(--green); }
         .res-loss { background: rgba(255, 61, 61, 0.2); color: var(--red); border: 1px solid var(--red); }
 
-        /* Buffs Grid */
         .buff-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
@@ -134,7 +132,6 @@
         }
         .btn-main:hover { filter: brightness(1.1); }
 
-        /* Total Result */
         .summary-box {
             margin-top: 20px;
             padding: 15px;
@@ -146,6 +143,8 @@
         }
         .summary-val { font-size: 2rem; font-weight: bold; color: white; margin: 10px 0; }
         .summary-detail { display: flex; justify-content: space-around; font-size: 0.9rem; color: #aaa; margin-top: 10px; }
+
+        .helper-text { font-size: 0.7rem; color: #666; margin-left: 5px; font-style: italic; }
 
     </style>
 </head>
@@ -195,7 +194,7 @@
             <select id="buildingLevel"></select>
         </div>
         <div>
-            <label>Or Manual VR</label>
+            <label>Manual VR <span style="font-size:0.7rem; color:var(--accent);">(Ignores Buffs)</span></label>
             <input type="number" id="manualVR" placeholder="Override">
         </div>
         <div>
@@ -210,13 +209,17 @@
     
     <div class="buff-grid">
         <label class="check-item"><input type="checkbox" id="activeCard"> Active Card (+250)</label>
-        <label class="check-item"><input type="checkbox" id="hasElectrician" checked> Electrician</label>
+        <label class="check-item"><input type="checkbox" id="protector"> Protector (+250 VR)</label> <!-- NEW CHECKBOX -->
+        <label class="check-item"><input type="checkbox" id="hasElectrician" checked> Electrician (Prevents Boss Buff)</label>
         <label class="check-item"><input type="checkbox" id="warFever"> War Fever (+1%)</label>
         <label class="check-item"><input type="checkbox" id="megaBuff"> Title / Skin (+5%)</label>
     </div>
 
     <!-- SQUAD ROSTER -->
-    <div class="section-header"><span>SQUAD ROSTER</span></div>
+    <div class="section-header">
+        <span>SQUAD ROSTER</span>
+        <span class="helper-text">Enter Power in Millions (e.g. 51.5)</span>
+    </div>
     
     <!-- Players 1-5 -->
     <div id="playerInputs"></div>
@@ -230,12 +233,13 @@
             <span id="totalWaves">0 Waves</span>
             <span id="penaltyDisplay"></span>
         </div>
+        <div id="bossBuffDisplay" style="font-size:0.8rem; color:var(--red); margin-top:5px; display:none;">⚠️ Boss Power +50% (No Electrician)</div>
     </div>
 
 </div>
 
 <script>
-    // --- CONFIG ---
+    // --- DATABASE ---
     const bossData = {
         1: { vr: 3750, pwr: 19290500 },
         2: { vr: 6250, pwr: 23266000 },
@@ -258,7 +262,6 @@
     ];
 
     function init() {
-        // Init Building Levels
         const sel = document.getElementById('buildingLevel');
         buildingLevels.forEach(b => {
             let opt = document.createElement('option');
@@ -279,7 +282,7 @@
             html += `
             <div class="player-row">
                 <div class="player-num">${label}</div>
-                <input type="number" id="p${i}_power" placeholder="Power">
+                <input type="number" id="p${i}_power" placeholder="e.g. 51.5" step="0.1">
                 <select id="p${i}_type">
                     <option value="Tank">Tank 🛡️</option>
                     <option value="Missile">Missile 🚀</option>
@@ -295,26 +298,33 @@
         const lvl = document.getElementById('bossLevel').value;
         const info = bossData[lvl];
         document.getElementById('reqVR').value = info.vr;
-        document.getElementById('bossStatsDisplay').innerText = `DEF: ${info.pwr.toLocaleString()}`;
+        document.getElementById('bossStatsDisplay').innerText = `DEF: ${(info.pwr/1000000).toFixed(1)}M`;
     }
 
-    // --- SIMULATION ---
     function calculateRally() {
         const lvl = parseInt(document.getElementById('bossLevel').value);
         const reqVR = bossData[lvl].vr;
-        const bossPwr = bossData[lvl].pwr;
+        let bossPwr = bossData[lvl].pwr;
         const bossName = document.getElementById('bossType').value;
         const bossElement = bossArchetypes[bossName];
 
-        // 1. Calculate VR (Based on Leader)
+        // 1. Leader VR Logic (Absolute Override for Manual VR)
         let buildVR = parseInt(document.getElementById('buildingLevel').value) || 0;
         let manualVR = parseFloat(document.getElementById('manualVR').value);
-        let baseVR = manualVR > 0 ? manualVR : buildVR;
-
-        let lhVal = parseInt(document.getElementById('lighthouse').value);
-        let lhBonus = (lhVal >= 3) ? 250 : 150;
-        let cardBonus = document.getElementById('activeCard').checked ? 250 : 0;
-        let rallyVR = baseVR + lhBonus + cardBonus;
+        
+        let rallyVR = 0;
+        if (manualVR > 0) {
+            // Absolute override: Manual VR IS the final rallyVR
+            rallyVR = manualVR;
+        } else {
+            // Calculate normally with building + lighthouse + active card + protector
+            let lhVal = parseInt(document.getElementById('lighthouse').value);
+            let lhBonus = (lhVal >= 3) ? 250 : 150;
+            let cardBonus = document.getElementById('activeCard').checked ? 250 : 0;
+            let protectorBonus = document.getElementById('protector').checked ? 250 : 0; // NEW: Protector Bonus
+            
+            rallyVR = buildVR + lhBonus + cardBonus + protectorBonus; // Added protectorBonus
+        }
 
         // 2. Penalty
         let penaltyPct = 0;
@@ -323,19 +333,30 @@
         }
         if (penaltyPct > 1) penaltyPct = 1;
 
-        // 3. Global Mods
+        // 3. Player Mods
         let globalMod = 1.0;
+        let lhVal = parseInt(document.getElementById('lighthouse').value);
         if (lhVal == 3) globalMod += 0.03;
         if (lhVal == 4) globalMod += 0.05;
         if (document.getElementById('warFever').checked) globalMod += 0.01;
         if (document.getElementById('megaBuff').checked) globalMod += 0.05;
-        if (!document.getElementById('hasElectrician').checked) globalMod *= 0.7;
+
+        // 4. Boss Environment Mods (Electrician)
+        let bossBuffText = document.getElementById('bossBuffDisplay');
+        if (!document.getElementById('hasElectrician').checked) {
+            bossPwr = bossPwr * 1.5; // Boss gets 50% Buff
+            bossBuffText.style.display = 'block';
+        } else {
+            bossBuffText.style.display = 'none';
+        }
 
         let totalWaves = 0;
 
-        // 4. Simulate Each Player
+        // 5. Loop Players
         for (let i = 1; i <= 5; i++) {
-            let pwr = parseFloat(document.getElementById(`p${i}_power`).value) || 0;
+            let rawInput = parseFloat(document.getElementById(`p${i}_power`).value) || 0;
+            let pwr = rawInput * 1000000;
+            
             let type = document.getElementById(`p${i}_type`).value;
             let badge = document.getElementById(`p${i}_res`);
 
@@ -344,7 +365,6 @@
                 continue;
             }
 
-            // Type Counter
             let myMod = globalMod;
             let counterBonus = 0;
             if ((type == 'Tank' && bossElement == 'Missile') ||
@@ -359,10 +379,7 @@
 
             let effPwr = pwr * (1 - penaltyPct) * myMod;
 
-            // Threshold Calculation (The Häl Rule)
-            // If Neutral: Need 1.25x Power to survive attrition
-            // If Advantage: Need 1.05x Power
-            // If Disadvantage: Need 1.40x Power
+            // Thresholds vs Buffed Boss
             let safetyFactor = 1.25;
             if (counterBonus === 1) safetyFactor = 1.05;
             if (counterBonus === -1) safetyFactor = 1.4;
@@ -371,29 +388,21 @@
             let ratio = effPwr / winThreshold;
             
             let playerWaves = 0;
-
             if (ratio >= 1.0) {
-                // Heuristic: If ratio is 1.0, you survive 1 round.
-                // If ratio is 2.0 (Massively overpowered), you survive 5 rounds.
-                // Formula: 1 + (Surplus * 4) capped at 5.
                 playerWaves = 1 + Math.floor((ratio - 1.0) * 4);
-                if (playerWaves > 5) playerWaves = 5; // Cap at 5 rounds per player
-
+                if (playerWaves > 5) playerWaves = 5;
                 badge.innerText = `${playerWaves} Waves`;
                 badge.className = "result-badge res-win";
             } else {
                 badge.innerText = "DEFEAT";
                 badge.className = "result-badge res-loss";
             }
-            
             totalWaves += playerWaves;
         }
 
-        // 5. Summary
+        // 6. Summary
         document.getElementById('summary').style.display = 'block';
         document.getElementById('totalWaves').innerText = `${totalWaves} Total Waves`;
-        
-        // 1 Wave ≈ 1% HP (Standard for S4 Strongholds)
         let dmgPct = totalWaves * 1.0; 
         document.getElementById('totalDamage').innerText = `~${dmgPct}% HP`;
         document.getElementById('totalDamage').style.color = dmgPct > 0 ? "var(--green)" : "var(--red)";
