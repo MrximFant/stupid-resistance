@@ -2,8 +2,12 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <!-- Force Browser to check for updates (Prevent Stale Cache) -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>S4 Rally Simulator</title>
+    <title>S4 Rally Sim v2.0</title>
     <style>
         :root {
             --bg: #121212;
@@ -13,6 +17,7 @@
             --accent: #ffb700; /* Gold */
             --green: #00e676;
             --red: #ff3d3d;
+            --blue: #2979ff;
             --border: #333;
         }
 
@@ -35,6 +40,19 @@
             border-radius: 12px;
             box-shadow: 0 10px 40px rgba(0,0,0,0.6);
             border: 1px solid var(--border);
+            position: relative;
+        }
+
+        .version-tag {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            font-size: 0.7rem;
+            color: #555;
+            background: #111;
+            padding: 2px 6px;
+            border-radius: 4px;
+            border: 1px solid #333;
         }
 
         h2 { 
@@ -118,8 +136,14 @@
             cursor: pointer;
         }
 
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
         .btn-main {
-            width: 100%;
+            flex: 2;
             padding: 15px;
             background: linear-gradient(135deg, var(--accent), #ff9100);
             color: #000;
@@ -130,7 +154,20 @@
             cursor: pointer;
             text-transform: uppercase;
         }
+        
+        .btn-save {
+            flex: 1;
+            padding: 15px;
+            background: #333;
+            color: #fff;
+            border: 1px solid #555;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
         .btn-main:hover { filter: brightness(1.1); }
+        .btn-save:hover { background: #444; }
 
         .summary-box {
             margin-top: 20px;
@@ -151,6 +188,7 @@
 <body>
 
 <div class="container">
+    <div class="version-tag">v2.0</div>
     <h2>☣️ S4 Rally Simulator</h2>
 
     <!-- TARGET INTEL -->
@@ -194,23 +232,23 @@
             <select id="buildingLevel"></select>
         </div>
         <div>
-            <label>Manual VR <span style="font-size:0.7rem; color:var(--accent);">(Ignores Buffs)</span></label>
+            <label>Manual VR <span style="font-size:0.7rem; color:var(--accent);">(Total Override)</span></label>
             <input type="number" id="manualVR" placeholder="Override">
         </div>
         <div>
             <label>Lighthouse</label>
             <select id="lighthouse">
                 <option value="0">Lv 0-2 (+150)</option>
-                <option value="3">Lv 3 (+250, +3%)</option>
-                <option value="4">Lv 4 (+250, +5%)</option>
+                <option value="3">Lv 3 (+250)</option>
+                <option value="4">Lv 4 (+250)</option>
             </select>
         </div>
     </div>
     
     <div class="buff-grid">
         <label class="check-item"><input type="checkbox" id="activeCard"> Active Card (+250)</label>
-        <label class="check-item"><input type="checkbox" id="protector"> Protector (+250 VR)</label> <!-- NEW CHECKBOX -->
-        <label class="check-item"><input type="checkbox" id="hasElectrician" checked> Electrician (Prevents Boss Buff)</label>
+        <label class="check-item"><input type="checkbox" id="protector"> Protector (+250 VR)</label>
+        <label class="check-item"><input type="checkbox" id="hasElectrician" checked> Electrician (Prevents Buff)</label>
         <label class="check-item"><input type="checkbox" id="warFever"> War Fever (+1%)</label>
         <label class="check-item"><input type="checkbox" id="megaBuff"> Title / Skin (+5%)</label>
     </div>
@@ -224,7 +262,11 @@
     <!-- Players 1-5 -->
     <div id="playerInputs"></div>
 
-    <button class="btn-main" onclick="calculateRally()">SIMULATE BATTLE</button>
+    <div class="controls">
+        <button class="btn-save" onclick="saveData()">💾 SAVE TEAM</button>
+        <button class="btn-main" onclick="calculateRally()">SIMULATE</button>
+        <button class="btn-save" onclick="clearData()">❌ CLEAR</button>
+    </div>
 
     <div id="summary" class="summary-box">
         <div style="font-size:0.9rem; color:#888;">TOTAL RALLY DAMAGE</div>
@@ -262,6 +304,7 @@
     ];
 
     function init() {
+        // Init Building Levels
         const sel = document.getElementById('buildingLevel');
         buildingLevels.forEach(b => {
             let opt = document.createElement('option');
@@ -270,8 +313,14 @@
             sel.add(opt);
         });
         sel.value = 5000;
-        updateBossStats();
+        
         generatePlayerRows();
+        
+        // AUTO LOAD DATA ON STARTUP
+        loadData();
+        
+        // Set stats after load
+        updateBossStats();
     }
 
     function generatePlayerRows() {
@@ -301,6 +350,82 @@
         document.getElementById('bossStatsDisplay').innerText = `DEF: ${(info.pwr/1000000).toFixed(1)}M`;
     }
 
+    // --- SAVE / LOAD SYSTEM ---
+    function saveData() {
+        const data = {
+            // Settings
+            bossLevel: document.getElementById('bossLevel').value,
+            bossType: document.getElementById('bossType').value,
+            buildingLevel: document.getElementById('buildingLevel').value,
+            manualVR: document.getElementById('manualVR').value,
+            lighthouse: document.getElementById('lighthouse').value,
+            // Checkboxes
+            activeCard: document.getElementById('activeCard').checked,
+            protector: document.getElementById('protector').checked,
+            hasElectrician: document.getElementById('hasElectrician').checked,
+            warFever: document.getElementById('warFever').checked,
+            megaBuff: document.getElementById('megaBuff').checked,
+            // Players
+            players: []
+        };
+
+        for(let i=1; i<=5; i++) {
+            data.players.push({
+                power: document.getElementById(`p${i}_power`).value,
+                type: document.getElementById(`p${i}_type`).value
+            });
+        }
+
+        localStorage.setItem('s4_rally_data_v2', JSON.stringify(data));
+        
+        // Visual Feedback
+        const btn = document.querySelector('.btn-save');
+        const origText = btn.innerText;
+        btn.innerText = "✅ SAVED";
+        setTimeout(() => btn.innerText = origText, 1500);
+    }
+
+    function loadData() {
+        const raw = localStorage.getItem('s4_rally_data_v2');
+        if (!raw) return;
+
+        try {
+            const data = JSON.parse(raw);
+            
+            document.getElementById('bossLevel').value = data.bossLevel || "3";
+            document.getElementById('bossType').value = data.bossType || "Doji";
+            document.getElementById('buildingLevel').value = data.buildingLevel || "5000";
+            document.getElementById('manualVR').value = data.manualVR || "";
+            document.getElementById('lighthouse').value = data.lighthouse || "0";
+            
+            document.getElementById('activeCard').checked = data.activeCard;
+            document.getElementById('protector').checked = data.protector;
+            document.getElementById('hasElectrician').checked = data.hasElectrician;
+            document.getElementById('warFever').checked = data.warFever;
+            document.getElementById('megaBuff').checked = data.megaBuff;
+
+            if (data.players) {
+                data.players.forEach((p, index) => {
+                    const i = index + 1;
+                    if (document.getElementById(`p${i}_power`)) {
+                        document.getElementById(`p${i}_power`).value = p.power;
+                        document.getElementById(`p${i}_type`).value = p.type;
+                    }
+                });
+            }
+        } catch (e) {
+            console.log("Error loading save data", e);
+        }
+    }
+
+    function clearData() {
+        if(confirm("Clear saved team data?")) {
+            localStorage.removeItem('s4_rally_data_v2');
+            location.reload();
+        }
+    }
+
+    // --- SIMULATION ---
     function calculateRally() {
         const lvl = parseInt(document.getElementById('bossLevel').value);
         const reqVR = bossData[lvl].vr;
@@ -308,22 +433,19 @@
         const bossName = document.getElementById('bossType').value;
         const bossElement = bossArchetypes[bossName];
 
-        // 1. Leader VR Logic (Absolute Override for Manual VR)
+        // 1. Leader VR Logic (Absolute Override)
         let buildVR = parseInt(document.getElementById('buildingLevel').value) || 0;
         let manualVR = parseFloat(document.getElementById('manualVR').value);
         
         let rallyVR = 0;
         if (manualVR > 0) {
-            // Absolute override: Manual VR IS the final rallyVR
             rallyVR = manualVR;
         } else {
-            // Calculate normally with building + lighthouse + active card + protector
             let lhVal = parseInt(document.getElementById('lighthouse').value);
             let lhBonus = (lhVal >= 3) ? 250 : 150;
             let cardBonus = document.getElementById('activeCard').checked ? 250 : 0;
-            let protectorBonus = document.getElementById('protector').checked ? 250 : 0; // NEW: Protector Bonus
-            
-            rallyVR = buildVR + lhBonus + cardBonus + protectorBonus; // Added protectorBonus
+            let protectorBonus = document.getElementById('protector').checked ? 250 : 0;
+            rallyVR = buildVR + lhBonus + cardBonus + protectorBonus;
         }
 
         // 2. Penalty
@@ -335,16 +457,15 @@
 
         // 3. Player Mods
         let globalMod = 1.0;
-        let lhVal = parseInt(document.getElementById('lighthouse').value);
-        if (lhVal == 3) globalMod += 0.03;
-        if (lhVal == 4) globalMod += 0.05;
+        // REMOVED: Lighthouse Level 3/4 no longer adds power, only VR.
+        
         if (document.getElementById('warFever').checked) globalMod += 0.01;
         if (document.getElementById('megaBuff').checked) globalMod += 0.05;
 
         // 4. Boss Environment Mods (Electrician)
         let bossBuffText = document.getElementById('bossBuffDisplay');
         if (!document.getElementById('hasElectrician').checked) {
-            bossPwr = bossPwr * 1.5; // Boss gets 50% Buff
+            bossPwr = bossPwr * 1.5; 
             bossBuffText.style.display = 'block';
         } else {
             bossBuffText.style.display = 'none';
@@ -379,7 +500,7 @@
 
             let effPwr = pwr * (1 - penaltyPct) * myMod;
 
-            // Thresholds vs Buffed Boss
+            // Thresholds
             let safetyFactor = 1.25;
             if (counterBonus === 1) safetyFactor = 1.05;
             if (counterBonus === -1) safetyFactor = 1.4;
